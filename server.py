@@ -1,7 +1,7 @@
 #!/usr/bin/python
 #-*- coding=utf-8 -*-
 
-import os, re
+import os, re, sys
 from socket import *
 
 default_res_status = "HTTP/1.1 200 OK\n"
@@ -70,8 +70,11 @@ def handle_request(req_file, req_headers):
     else:
         return default_res_status, default_res_headers, ''
 
+port = 8080
 s = socket(AF_INET, SOCK_STREAM)
-s.bind(('127.0.0.1', 8082))
+if len(sys.argv) > 1:
+    port = int(sys.argv[1])
+s.bind(('127.0.0.1', port))
 s.listen(5)
 try:
     while 1:

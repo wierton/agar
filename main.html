@@ -2,42 +2,28 @@
 <html>
 <head>
 <meta charset="utf-8"> 
-<title>菜鸟教程(runoob.com)</title> 
-<style> 
-div
-{
-	width:100px;
-	height:100px;
-	background:red;
-	position:relative;
-	animation:myfirst 5s;
-	-webkit-animation:myfirst 5s; /* Safari and Chrome */
-}
-
-@keyframes myfirst
-{
-	0%   {background:red; left:0px; top:0px;}
-	25%  {background:yellow; left:200px; top:0px;}
-	50%  {background:blue; left:200px; top:200px;}
-	75%  {background:green; left:0px; top:200px;}
-	100% {background:red; left:0px; top:0px;}
-}
-
-@-webkit-keyframes myfirst /* Safari and Chrome */
-{
-	0%   {background:red; left:0px; top:0px;}
-	25%  {background:yellow; left:200px; top:0px;}
-	50%  {background:blue; left:200px; top:200px;}
-	75%  {background:green; left:0px; top:200px;}
-	100% {background:red; left:0px; top:0px;}
-}
-</style>
+<title>agar.io</title> 
+<script type="text/javascript" src="jquery-1.11.1.min.js"></script>
+<script type="text/javascript" src="draw.js"></script>
+<link href="layout.css" rel="stylesheet" type="text/css">
 </head>
 <body>
 
-<p><b>注意:</b> 该实例在 Internet Explorer 9 及更早 IE 版本是无效的。</p>
+<div class="surface">
+<div class="ranking-list">
+<div><span class="ranking-list-top">Ranking</span></div>
+<div><span class="player"><em>1. </em>king jong-un</span></div>
+<div><span class="player"><em>2. </em>ukalo</span></div>
+<div><span class="player"><em>3. </em>Solo</span></div>
+<div><span class="player"><em>4. </em>European Union</span></div>
+<div><span class="player"><em>5. </em>Taiwan</span></div>
+</div>
+<canvas id="canvas"></canvas>
+</div>
 
-<div></div>
+<script>
+
+</script>
 
 </body>
 </html>

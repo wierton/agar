@@ -1,0 +1,45 @@
+/* surface, canvas, ranking
+ */
+
+#canvas {
+	z-index:-1;
+	margin:0px;
+	border:0px;
+	padding:0px;
+	position:absolute;
+	left:0px;
+	top:0px;
+}
+
+.ranking-list {
+	z-index:1;
+	width:200px;
+	height:280px;
+	margin-top:30px;
+	margin-right:50px;
+	position:fixed;
+	right:0px;
+	background-color:rgba(127, 127, 127, 0.45);
+	border-radius:5px;
+}
+
+.ranking-list-top {
+	width:200px;
+	height:26px;
+	color:red;
+	text-align:center;
+	font-size:26px;
+	float:right;
+	margin-top:16px;
+	margin-bottom:16px;
+}
+
+.player {
+	position:relative;
+	border-width:1px;
+	border-color:#222222;
+	margin:0px;
+	color:#ffffff;
+	font-size:20px;
+	padding-left:10px;
+}
