@@ -1,4 +1,9 @@
 (function(){
+	var itemMaxNum      = 500;
+	var itemActualNum = 0;
+	var itemXArray = new Array(itemMaxNum);
+	var itemYArray = new Array(itemMaxNum);
+	var itemRArray = new Array(itemMaxNum);
 	var cellWidth   = 500;
 	var cellHeight  = 500;
 	var wholeWidth  = 2000;
@@ -10,26 +15,58 @@
 
 	var mouseX       = wholeWidth / 2;
 	var mouseY       = wholeHeight / 2;
-	var playerX      = wholeWidth / 2;
-	var playerY      = wholeHeight / 2;
-	var playerRadius = 50;
+	var playerX;
+	var playerY;
+	var playerId;
+	var playerRadius;
 	var playerColor  = "#235689";
 	var playerSpeed  = 4.5;
 	var playerMaxSpeed = 6.0;
+	var updateDataFromServer = {};
 
-	var frameNumber  = 20;
+	var frameNumber  = 40;
 
 	$(document).ready(function(){
 		$("#canvas").attr({
 			"width":'' + document.documentElement.clientWidth,
 			"height":'' + document.documentElement.clientHeight
 		});
-		ctx = document.getElementById("canvas").getContext("2d")
+		initFromServer();
+		ctx = document.getElementById("canvas").getContext("2d");
 		window.onresize = resizeCanvas;
 		document.onmousemove = moveMouse;
+		drawBack();
 	})
 	
 	setInterval("this.mainLogic()", 1000 / frameNumber);
+
+	function test()
+	{
+		var testEnemy = [];
+		for(var i = 0; i < 10; i++)
+		{
+			var item = {};
+			item.x = Math.random();
+			item.y = Math.random();
+			testEnemy.push(item);
+		}
+
+		for(var i = 0; i < testEnemy.length; i++)
+		{
+			console.log(i + ' ' + testEnemy[i].x + " " + testEnemy[i].y);
+		}
+	}
+
+	function initFromServer()
+	{
+		var data = '{"header":"init"}';
+		var retStr = postDataToServer(data);
+		var retObj = JSON.parse(retStr);
+		playerId = retObj.playerId;
+		playerX = retObj.pos.x;
+		playerY = retObj.pos.y;
+		playerRadius = retObj.playerRadius;
+	}
 
 	function resizeCanvas(e) {
 		$("#canvas").attr({
@@ -44,7 +81,6 @@
 		refreshCanvas();
 	}
 
-	console.log("Hello World!\n");
 	function drawBack(){
 		var toUp = function(value) {
 			return parseInt((value + (zoomRate * cellWidth)) / (zoomRate * cellWidth)) * (zoomRate * cellWidth);
@@ -65,9 +101,11 @@
 		}
 	}
 
-	function drawFood(x, y) {
+	function drawItem(x, y, r) {
 		ctx.fillStyle = playerColor;
-		ctx.arc(availWidth/2, availHeight/2, playerRadius, 0, 2*Math.PI);
+		ctx.beginPath();
+		ctx.arc(x, y, r, 0, 2*Math.PI);
+		ctx.closePath();
 		ctx.fill();
 	}
 
@@ -110,10 +148,60 @@
 		drawPlayer();
 	}
 
-	this.mainLogic = function() {
-		movePlayer();
-		drawBack();
-		drawPlayer();
+	function updateFromServer()	{
+		var tmp = '';
+		var data = {
+			"header":"update",
+			"body"  : {
+				"playerId":playerId,
+				"dirX"    :(mouseX - availWidth/2),
+				"dirY"    :(mouseY - availHeight/2),
+				"actualWidth" :(zoomRate * availWidth),
+				"actualHeight":(zoomRate * availHeight),
+				"zoomRate"    :zoomRate
+			}
+		};
+		data = JSON.stringify(data);
+		tmp = postDataToServer(data);
+		updateDataFromServer = JSON.parse(tmp);
 	}
 
+	function parseDataFromServer() {
+		var lene = updateDataFromServer.enemy.length;
+		var lfru = updateDataFromServer.fruit.length;
+		var halfAvailWidth  = availWidth / 2;
+		var halfAvailHeight = availHeight / 2;
+		playerX = updateDataFromServer.player.x;
+		playerY = updateDataFromServer.player.y;
+		playerRadius = updateDataFromServer.r;
+		itemActualNum = lene + lfru;
+		itemActualNum = itemActualNum < itemMaxNum ? itemActualNum : itemMaxNum;
+		for(var i = 0; i < lene; i++)
+		{
+			itemXArray[i] = updateDataFromServer.enemy[i].x - playerX + halfAvailWidth;
+			itemYArray[i] = updateDataFromServer.enemy[i].y - playerY + halfAvailHeight;
+			itemRArray[i] = updateDataFromServer.enemy[i].r;
+		}
+		for(var i = 0; i < lfru; i++)
+		{
+			itemXArray[i+lene] = updateDataFromServer.fruit[i].x - playerX + halfAvailWidth;
+			itemYArray[i+lene] = updateDataFromServer.fruit[i].y - playerY + halfAvailHeight;
+			itemRArray[i+lene] = 5;
+		}
+	}
+
+	function displayParsedData() {
+		for(var i = 0; i < itemActualNum; i++)
+		{
+			drawItem(itemXArray[i], itemYArray[i], itemRArray[i]);
+		}
+	}
+
+	this.mainLogic = function() {
+		drawBack();
+		drawPlayer();
+		updateFromServer();
+		parseDataFromServer();
+		displayParsedData();
+	}
 })();
