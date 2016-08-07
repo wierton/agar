@@ -17,7 +17,7 @@
 	var playerSpeed  = 4.5;
 	var playerMaxSpeed = 6.0;
 
-	var frameNumber  = 24;
+	var frameNumber  = 20;
 
 	$(document).ready(function(){
 		$("#canvas").attr({
