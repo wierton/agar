@@ -1,7 +1,7 @@
 #!/usr/bin/python
 #-*- coding=utf-8 -*-
 
-import os, re, sys
+import os, re, sys, thread
 from socket import *
 
 default_res_status = "HTTP/1.1 200 OK\n"
@@ -56,7 +56,6 @@ def format_request(request):
     return req_file, req_headers
 
 def handle_request(req_file, req_headers):
-    print req_file
     if os.path.isdir(req_file):
         return default_res_status, default_res_headers, ''
     if os.path.exists(req_file):
@@ -70,6 +69,18 @@ def handle_request(req_file, req_headers):
     else:
         return default_res_status, default_res_headers, ''
 
+def respond_request(conn, addr):
+    while(1):
+        data = conn.recv(1024)
+        req_file, req_headers = format_request(data)
+        res_status, res_headers, res_body = handle_request(req_file, req_headers)
+        response = make_response(res_status, res_headers, res_body)
+        conn.sendall(response)
+        if not 'Connection' in req_headers or not 'keep-alive' in req_headers['Connection']:
+            conn.close()
+            print 'end--'
+            break;
+
 port = 8080
 s = socket(AF_INET, SOCK_STREAM)
 if len(sys.argv) > 1:
@@ -80,13 +91,7 @@ try:
     while 1:
         conn,addr = s.accept()
         print 'connected by', addr
-        while 1:
-            data = conn.recv(1024)
-            req_file, req_headers = format_request(data)
-            res_status, res_headers, res_body = handle_request(req_file, req_headers)
-            response = make_response(res_status, res_headers, res_body)
-            conn.sendall(response)
+        thread.start_new_thread(respond_request, (conn, addr))
 finally:
-    print 'end\n'
-    conn.close()
+    print '--finally--'
     s.close()
