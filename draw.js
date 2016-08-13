@@ -66,6 +66,9 @@
 		playerX = retObj.pos.x;
 		playerY = retObj.pos.y;
 		playerRadius = retObj.playerRadius;
+		$.post('gamedat', data, function(data, statu){
+			console.log(statu + data);
+		});
 	}
 
 	function resizeCanvas(e) {
@@ -164,11 +167,9 @@
 		data = JSON.stringify(data);
 		tmp = postDataToServer(data);
 		updateDataFromServer = JSON.parse(tmp);
-		/*
 		$.post('gamedat', data, function(data, statu){
 			console.log(statu + data);
 		});
-		*/
 	}
 
 	function parseDataFromServer() {

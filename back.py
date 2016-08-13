@@ -1,7 +1,7 @@
 #!/usr/bin/python
 #-*- coding=utf-8 -*-
 
-import random
+import math, json, random
 
 cellWidth     = 500
 cellHeight    = 500
@@ -11,34 +11,158 @@ playerMaxNum  = 20
 ballMaxNum    = 320#at most 16 ball for per player
 fruitMaxNum   = 200
 maxDist       = 100
-playerAvailIdArray  = [0.] * playerMaxNum;
-playerLiveArray     = [0.] * playerMaxNum;
-playerPosXArray     = [0.] * playerMaxNum;
-playerPosYArray     = [0.] * playerMaxNum;
-playerDirXArray     = [0.] * playerMaxNum;
-playerDirYArray     = [0.] * playerMaxNum;
-ballPosXArray       = [0.] * playerMaxNum;
-ballPosYArray       = [0.] * playerMaxNum;
-fruitLiveArray      = [0.] * fruitMaxNum;
-fruitPosXArray      = [0.] * fruitMaxNum;
-fruitPosYArray      = [0.] * fruitMaxNum;
-playerRadiusArray   = [0.] * playerMaxNum;
-playerMaxSpeedArray = [0.] * playerMaxNum;
+playerAvailIdArray  = [0.] * playerMaxNum
+playerLiveArray     = [0.] * playerMaxNum
+playerPosXArray     = [0.] * playerMaxNum
+playerPosYArray     = [0.] * playerMaxNum
+playerDirXArray     = [0.] * playerMaxNum
+playerDirYArray     = [0.] * playerMaxNum
+ballPosXArray       = [0.] * playerMaxNum
+ballPosYArray       = [0.] * playerMaxNum
+fruitLiveArray      = [0.] * fruitMaxNum
+fruitPosXArray      = [0.] * fruitMaxNum
+fruitPosYArray      = [0.] * fruitMaxNum
+playerRadiusArray   = [0.] * playerMaxNum
+playerMaxSpeedArray = [0.] * playerMaxNum
 
 def init():
     for i in range(playerMaxNum):
-        playerAvailIdArray [i] = i;
-        playerLiveArray    [i] = True;
-        playerPosXArray    [i] = random.uniform(0, wholeWidth);
-        playerPosYArray    [i] = random.uniform(0, wholeHeight);
-        playerDirXArray    [i] = random.random();
-        playerDirYArray    [i] = random.random();
-        playerRadiusArray  [i] = 20;
-        playerMaxSpeedArray[i] = 3.0;
+        playerAvailIdArray [i] = i
+        playerLiveArray    [i] = True
+        playerPosXArray    [i] = random.uniform(0, wholeWidth)
+        playerPosYArray    [i] = random.uniform(0, wholeHeight)
+        playerDirXArray    [i] = random.random()
+        playerDirYArray    [i] = random.random()
+        playerRadiusArray  [i] = 20
+        playerMaxSpeedArray[i] = 3.0
     for i in range(fruitMaxNum):
-        fruitLiveArray     [i] = True;
-        fruitPosXArray     [i] = random.random() * wholeWidth;
-        fruitPosYArray     [i] = random.random() * wholeHeight;
+        fruitLiveArray     [i] = True
+        fruitPosXArray     [i] = random.random() * wholeWidth
+        fruitPosYArray     [i] = random.random() * wholeHeight
+
+def getFreePlayerId():
+    if len(playerAvailIdArray) > 0:
+        return playerAvailIdArray.pop()
+    else:
+        return -1
+
+def responseInit(obj):
+    playerId = 0
+    retObj = {}
+    playerId = retObj['playerId'] = getFreePlayerId()
+    retObj['playerRadius'] = playerRadiusArray[playerId]
+    retObj['pos'] = {}
+    retObj['pos']['x'] = playerPosXArray[playerId]
+    retObj['pos']['y'] = playerPosYArray[playerId]
+    return retObj
+
+def checkCollision(playerId):
+    playerX = playerPosXArray[playerId]
+    playerY = playerPosYArray[playerId]
+    playerR = playerRadiusArray[playerId]
+    for i in range(playerMaxNum):
+        if i == playerId or not playerLiveArray[i]:
+            continue
+        x = playerPosXArray[i]
+        y = playerPosYArray[i]
+        r = playerRadiusArray[i]
+        dx = x-playerX
+        dy = y-playerY
+        dist = math.sqrt(dx*dx+dy*dy)
+        if r + 1 < playerR and dist + r < playerR + 1:
+            playerR = math.sqrt(r*r+playerR*playerR)
+            playerLiveArray[i] = False
+
+    for i in range(fruitMaxNum):
+        if not fruitLiveArray[i]:
+            continue
+        x = fruitPosXArray[i]
+        y = fruitPosYArray[i]
+        r = 5
+        dx = x-playerX
+        dy = y-playerY
+        dist = math.sqrt(dx*dx+dy*dy)
+        if r + 1 < playerR and dist + r < playerR:
+            playerR = math.sqrt(r*r+playerR*playerR + 1)
+            fruitLiveArray[i] = False
+    playerRadiusArray[playerId] = playerR
+
+def responseUpdate(obj):
+    '''
+    {"header":"update", "body":{}}
+      update-request {
+          "playerId":12,
+          "dirX":123,
+          "dirY":456,
+          "actualWidth":1366,
+          "actualHeight":768,
+          "zoomRate":1.0	}
+      update-response {
+          "player":{"x":465, "y":789},
+          "enemy":{"x":465, "y":789},
+          "fruit":{"x":465, "y":789}
+          }
+    '''
+    retJSON = {}
+    playerId = obj['body']['playerId']
+    actualWidth = obj['body']['actualWidth']
+    actualHeight = obj['body']['actualHeight']
+    playerX = playerPosXArray[playerId]
+    playerY = playerPosYArray[playerId]
+    playerR = playerRadiusArray[playerId]
+
+    dx = obj['body']['dirX']
+    dy = obj['body']['dirY']
+    dist = math.sqrt(dx*dx+dy*dy)
+    rate = [dist/maxDist, 1][dist > maxDist]
+    playerSpeed = rate * playerMaxSpeedArray[playerId]
+    
+    finalX = playerX + playerSpeed * dx / dist
+    finalY = playerY + playerSpeed * dy / dist
+
+    retJSON['player'] = {}
+    retJSON['enemy']  = []
+    retJSON['fruit']  = []
+    checkCollision(playerId)
+    for i in range(playerMaxNum):
+        x = playerPosXArray[i]
+        y = playerPosYArray[i]
+        r = playerRadiusArray[i]
+        if playerLiveArray[i] \
+	and 2*math.fabs(x-playerX) < actualWidth \
+        and 2*math.fabs(y-playerY) < actualHeight:
+            retJSON['enemy'].append({"x":x,"y":y,"r":r})
+
+    for i in range(fruitMaxNum):
+        x = fruitPosXArray[i]
+        y = fruitPosYArray[i]
+        if fruitLiveArray[i] \
+        and 2*math.fabs(x-playerX) < actualWidth \
+        and 2*math.fabs(y-playerY) < actualHeight:
+            retJSON['fruit'].append({"x":x,"y":y})
+
+    if finalX > 0 and finalX < wholeWidth:
+        playerX = playerPosXArray[playerId] = finalX
+    if finalY > 0 and finalY < wholeHeight:
+        playerY = playerPosYArray[playerId] = finalY
+
+    retJSON['player'] = {"x":playerX, "y":playerY, "r":playerR}
+    return retJSON
+
+# send and post
+def postDataToServer(dataFromClient):
+    obj = json.loads(dataFromClient)
+    switcher = {
+            'init':responseInit,
+            'update':responseUpdate
+            }
+    retObj = switcher[obj['header']](obj)
+    return json.dumps(retObj)
 
 def ack(req_data):
-    return 'just'
+    if req_data != '':
+        return postDataToServer(req_data)
+    else:
+        return ''
+
+init()

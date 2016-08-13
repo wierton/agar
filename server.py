@@ -82,6 +82,7 @@ def respond_request(conn, addr):
     while(1):
         data = conn.recv(1024)
         req_file, req_headers, req_data = parse_request(data)
+        if req_file == 'gamedat' and data == '' : continue
         res_status, res_headers, res_body = handle_request(req_file, req_headers, req_data)
         response = make_response(res_status, res_headers, res_body)
         conn.sendall(response)
