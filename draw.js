@@ -164,6 +164,11 @@
 		data = JSON.stringify(data);
 		tmp = postDataToServer(data);
 		updateDataFromServer = JSON.parse(tmp);
+		/*
+		$.post('gamedat', data, function(data, statu){
+			console.log(statu + data);
+		});
+		*/
 	}
 
 	function parseDataFromServer() {
