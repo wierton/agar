@@ -82,7 +82,9 @@ def respond_request(conn, addr):
     while(1):
         data = conn.recv(1024)
         req_file, req_headers, req_data = parse_request(data)
-        if req_file == 'gamedat' and data == '' : continue
+        if req_file == 'gamedat':
+            if data == '':continue
+            back.ws(conn, addr, req_headers, req_data)
         res_status, res_headers, res_body = handle_request(req_file, req_headers, req_data)
         response = make_response(res_status, res_headers, res_body)
         conn.sendall(response)
@@ -93,10 +95,18 @@ def respond_request(conn, addr):
             print 'disconnect with :', addr
             break;
 
+def amend_jsfile(addr, port):
+    with open('draw.js', 'r+') as fp:
+        content = fp.read()
+        content.replace('ws://127.0.0.1:8080/gamedat', 'ws://' + addr + ':' + port + '/gamedat')
+        print content
+        fp.write(content)
+
 addr = '127.0.0.1'
 port = 8080
 if len(sys.argv) > 1 :
     port = int(sys.argv[1])
+    amend_jsfile(addr, str(port))
 
 try:
     s = socket(AF_INET, SOCK_STREAM)

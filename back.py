@@ -157,6 +157,7 @@ def postDataToServer(dataFromClient):
             'update':responseUpdate
             }
     retObj = switcher[obj['header']](obj)
+    retObj['header'] = obj['header']
     return json.dumps(retObj)
 
 def ack(req_data):
@@ -164,5 +165,9 @@ def ack(req_data):
         return postDataToServer(req_data)
     else:
         return ''
+
+def ws(conn, addr):
+    while 1:
+        pass
 
 init()
