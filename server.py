@@ -98,8 +98,8 @@ def respond_request(conn, addr):
 def amend_jsfile(addr, port):
     with open('draw.js', 'r+') as fp:
         content = fp.read()
-        content.replace('ws://127.0.0.1:8080/gamedat', 'ws://' + addr + ':' + port + '/gamedat')
-        print content
+        content = content.replace('ws://127.0.0.1:8080/gamedat', 'ws://' + addr + ':' + port + '/gamedat')
+        fp.seek(0, 0)
         fp.write(content)
 
 addr = '127.0.0.1'
