@@ -26,7 +26,7 @@
 
 	var frameNumber  = 40;
 
-	var ws = new WebSocket("ws://127.0.0.1:8999/gamedat");
+	var ws = new WebSocket("ws://127.0.0.1:8081/gamedat");
 	ws.onmessage = getDataFromServer;
 
 	$(document).ready(function(){
@@ -39,6 +39,7 @@
 		window.onresize = resizeCanvas;
 		document.onmousemove = moveMouse;
 		drawBack();
+		ws.send('qweasd');
 	})
 	
 	setInterval("this.mainLogic()", 1000 / frameNumber);
@@ -69,9 +70,6 @@
 		playerX = retObj.pos.x;
 		playerY = retObj.pos.y;
 		playerRadius = retObj.playerRadius;
-		$.post('gamedat', data, function(data, statu){
-			console.log(statu + data);
-		});
 	}
 
 	function resizeCanvas(e) {
@@ -170,9 +168,11 @@
 		data = JSON.stringify(data);
 		tmp = postDataToServer(data);
 		updateDataFromServer = JSON.parse(tmp);
+		/*
 		$.post('gamedat', data, function(data, statu){
 			console.log(statu + data);
 		});
+		*/
 	}
 
 	function getDataFromServer(evt)

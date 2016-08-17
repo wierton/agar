@@ -4,39 +4,34 @@
 import os, re, sys, thread
 from socket import *
 import http, ws
+import parse
 
 handler_list = [
-        (r'^gamedat$' , ws.handler), 
-        (r'^(.*)$'  , http.handler),
-        (r'^$'        , http.ack_404),
+        (r'^(gamedat)$' , ws.handler,  True),
+        (r'^add/(\d+)/(\d+)$' , http.add,  False),
+        (r'^$'        , http.entry, False),
+        (r'^(.*)$'    , http.handler, False),
+        (r'*'         , http.ack_404, False),
         ]
 
 def switch_handler(conn, addr):
-    req_file = 'main.html'
-    data     = conn.recv(64 * 1024)
-    proto    = data.split('\n', 1)[0]
-    pa = re.compile('(GET|POST)\s+(\S+)\s+HTTP/1.1')
-    result = pa.match(proto)
-    if result:
-        tmp = result.group(2)
-        if tmp != '/':
-            if tmp[0] != '/':req_file = tmp
-            else            :req_file = tmp[1:]
-        else:
-            pass # req_file == 'main.html'
-        for regex in handler_list:
-            ma_obj = re.match(regex[0], req_file)
-            if ma_obj:
-                regex[1](conn, addr, req_file, data)
-                return
-        conn.close()
-
-def amend_jsfile(addr, port):
-    with open('draw.js', 'r+') as fp:
-        content = fp.read()
-        content = content.replace('ws://127.0.0.1:8080/gamedat', 'ws://' + addr + ':' + port + '/gamedat')
-        fp.seek(0, 0)
-        fp.write(content)
+    ucon = parse.load(conn, addr)
+    while 1:
+        ucon.recv()
+        suc_match = False
+        for tup in handler_list:
+            match = re.match(tup[0], ucon.rfile)
+            if match:
+                suc_match = True
+                if not tup[2]:
+                    sdata = tup[1](*match.groups())
+                    ucon.send(sdata)
+                else:
+                    tup[1](ucon, *match.groups())
+                break
+        if not ucon.alive or not suc_match:
+            ucon.close()
+            break
 
 def parse_args():
     args = ''.join(sys.argv[1:])
@@ -59,7 +54,6 @@ def parse_args():
 addr, port = '127.0.0.1', 8080
 if len(sys.argv) > 1 :
     addr, port = parse_args()
-    amend_jsfile(addr, str(port))
 print addr, port
 try:
     s = socket(AF_INET, SOCK_STREAM)

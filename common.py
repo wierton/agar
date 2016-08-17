@@ -28,3 +28,10 @@ def dich_to_str(dich):
         ret += index + ':' + dich[index] + "\r\n"
     ret += "\r\n"
     return ret
+
+def amend_jsfile(addr, port):
+    with open('draw.js', 'r+') as fp:
+        content = fp.read()
+        content = content.replace('ws://127.0.0.1:8080/gamedat', 'ws://' + addr + ':' + port + '/gamedat')
+        fp.seek(0, 0)
+        fp.write(content)
