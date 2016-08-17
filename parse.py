@@ -8,7 +8,8 @@ import json
 from common import get_asctime, get_filetype, dich_to_str
 
 class Parse:
-    def __init__(self, conn, addr):
+    def __init__(self, s, conn, addr):
+        self.s       = s
         self.conn    = conn
         self.addr    = addr
         self.alive   = True
@@ -26,6 +27,10 @@ class Parse:
 
     def recv(self):
         self.raw_recv()
+        if not '\r\n\r\n' in self.data:
+            log.e('Unable to parse the data.')
+            self.alive = False
+            return
         proto_headers, self.body = self.data.split('\r\n\r\n', 1)
         proto, headers = proto_headers.split('\r\n', 1)
         result = re.match(r'(GET|POST)\s+(\S+)\s+HTTP/1.1', proto)
@@ -75,6 +80,6 @@ class Parse:
         self.conn.close()
         log.i('Disconnect with:' + str(self.addr))
 
-def load(conn, addr):
-    parse = Parse(conn, addr)
+def load(s, conn, addr):
+    parse = Parse(s, conn, addr)
     return parse

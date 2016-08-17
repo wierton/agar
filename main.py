@@ -6,16 +6,26 @@ from socket import *
 import http, ws
 import parse
 
+'socket, addr, port, conn, regex, ucon'
 handler_list = [
-        (r'^(gamedat)$' , ws.handler,  True),
-        (r'^add/(\d+)/(\d+)$' , http.add,  False),
-        (r'^$'        , http.entry, False),
-        (r'^(.*)$'    , http.handler, False),
-        (r'*'         , http.ack_404, False),
+        (r'^(gamedat)$' , ws.handler    , ['ucon']),
+        (r'^add/(\d+)/(\d+)$' , http.add, ['regex']),
+        (r'^get_ip_port$' , http.res_ip , ['addr', 'port']),
+        (r'^$'            , http.entry  , []),
+        (r'^(.*)$'        , http.handler, ['regex']),
+        (r'*'             , http.ack_404, []),
         ]
 
-def switch_handler(conn, addr):
-    ucon = parse.load(conn, addr)
+def switch_handler(s, conn, addr):
+    ucon = parse.load(s, conn, addr)
+    alternative_args = {
+            'socket' : s,
+            'addr'   : s.getsockname[0],
+            'port'   : s.getsockname[1],
+            'conn'   : conn,
+            'ucon'   : ucon,
+            }
+
     while 1:
         ucon.recv()
         suc_match = False
@@ -23,11 +33,16 @@ def switch_handler(conn, addr):
             match = re.match(tup[0], ucon.rfile)
             if match:
                 suc_match = True
-                if not tup[2]:
-                    sdata = tup[1](*match.groups())
-                    ucon.send(sdata)
-                else:
-                    tup[1](ucon, *match.groups())
+                args = []
+                for key in tup[2]:
+                    if key in alternative_args:
+                        args.append(alternative_args[key])
+                    elif key == 'regex':
+                        args += match.groups()
+                    else:
+                        log.e("Unknown key {}".format(key))
+                sdata = tup[1](*args)
+                ucon.send(sdata)
                 break
         if not ucon.alive or not suc_match:
             ucon.close()
@@ -65,7 +80,7 @@ try:
     s.listen(10)
     while 1:
         conn,addr = s.accept()
-        print 'connected by', addr
-        thread.start_new_thread(switch_handler, (conn, addr))
+        log.i("{} {}".format('connected by', addr))
+        thread.start_new_thread(switch_handler, (s, conn, addr))
 finally:
     s.close()

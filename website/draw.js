@@ -26,7 +26,11 @@
 
 	var frameNumber  = 40;
 
-	var ws = new WebSocket("ws://127.0.0.1:8081/gamedat");
+	$.get('get_ip', function(data, statu) {
+		console.log(statu, data);
+	})
+
+	var ws = new WebSocket("ws://127.0.0.1:8080/gamedat");
 	ws.onmessage = getDataFromServer;
 
 	$(document).ready(function(){
