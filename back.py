@@ -1,6 +1,7 @@
 #!/usr/bin/python
 #-*- coding=utf-8 -*-
 
+import websocket
 import math, json, random
 
 cellWidth     = 500
@@ -11,21 +12,22 @@ playerMaxNum  = 20
 ballMaxNum    = 320#at most 16 ball for per player
 fruitMaxNum   = 200
 maxDist       = 100
-playerAvailIdArray  = [0.] * playerMaxNum
-playerLiveArray     = [0.] * playerMaxNum
+playerAvailIdArray  = [0] * playerMaxNum
+playerLiveArray     = [0] * playerMaxNum
 playerPosXArray     = [0.] * playerMaxNum
 playerPosYArray     = [0.] * playerMaxNum
 playerDirXArray     = [0.] * playerMaxNum
 playerDirYArray     = [0.] * playerMaxNum
 ballPosXArray       = [0.] * playerMaxNum
 ballPosYArray       = [0.] * playerMaxNum
-fruitLiveArray      = [0.] * fruitMaxNum
+fruitLiveArray      = [0] * fruitMaxNum
 fruitPosXArray      = [0.] * fruitMaxNum
 fruitPosYArray      = [0.] * fruitMaxNum
 playerRadiusArray   = [0.] * playerMaxNum
 playerMaxSpeedArray = [0.] * playerMaxNum
 
 def init():
+    playerAvailIdArray  = [0] * playerMaxNum
     for i in range(playerMaxNum):
         playerAvailIdArray [i] = i
         playerLiveArray    [i] = True
@@ -49,7 +51,8 @@ def getFreePlayerId():
 def responseInit(obj):
     playerId = 0
     retObj = {}
-    playerId = retObj['playerId'] = getFreePlayerId()
+    playerId = int(getFreePlayerId())
+    retObj['playerId'] = playerId
     retObj['playerRadius'] = playerRadiusArray[playerId]
     retObj['pos'] = {}
     retObj['pos']['x'] = playerPosXArray[playerId]
@@ -104,7 +107,7 @@ def responseUpdate(obj):
           }
     '''
     retJSON = {}
-    playerId = obj['body']['playerId']
+    playerId = int(obj['body']['playerId'])
     actualWidth = obj['body']['actualWidth']
     actualHeight = obj['body']['actualHeight']
     playerX = playerPosXArray[playerId]
@@ -150,7 +153,7 @@ def responseUpdate(obj):
     return retJSON
 
 # send and post
-def postDataToServer(dataFromClient):
+def handle_data(dataFromClient):
     obj = json.loads(dataFromClient)
     switcher = {
             'init':responseInit,
@@ -160,14 +163,9 @@ def postDataToServer(dataFromClient):
     retObj['header'] = obj['header']
     return json.dumps(retObj)
 
-def ack(req_data):
-    if req_data != '':
-        return postDataToServer(req_data)
-    else:
-        return ''
-
-def ws(conn, addr):
+def handler(ucon):
+    init()
+    ws = websocket.load(ucon)
     while 1:
-        pass
-
-init()
+        ws.recv()
+        ws.send(handle_data(ws.data))

@@ -1,6 +1,7 @@
 #!/usr/bin/python
 #-*- coding=utf-8 -*-
 
+import log
 import base64
 from struct import pack, unpack
 from hashlib import sha1
@@ -48,7 +49,7 @@ class WebSocket:
     def parse_data(self):
         if len(self.raw_data) < 2:
             log.e('error happened at recv data(ws)')
-            return
+            exit(2)
         fb, sb = unpack("2B", self.raw_data[:2])
         self.fin    = (fb & 0x80) >> 7
         self.opcode = fb & 0x3
@@ -95,6 +96,10 @@ class WebSocket:
             sdata += chr(0x81) + chr(127) + pack(">L", size)
         sdata += data
         self.conn.send(sdata)
+    def close(self, status_code=1000):
+        data = chr(0x88) + chr(2)
+        data += pack('H2s', status_code, 'aa')
+        self.conn.send(data)
 
 def handler(ucon):
     Sec_WebSocket_Key = ucon.headers['Sec-WebSocket-Key']
@@ -102,6 +107,13 @@ def handler(ucon):
     ws.handshake(Sec_WebSocket_Key)
     while 1:
         ws.recv()
-        print ws.data
-        ws.send('See You lala!')
+        ws.send('See You lala!'*18)
+    ws.close()
     ucon.alive = False
+    return ''
+
+def load(ucon):
+    Sec_WebSocket_Key = ucon.headers['Sec-WebSocket-Key']
+    ws = WebSocket(ucon.conn)
+    ws.handshake(Sec_WebSocket_Key)
+    return ws

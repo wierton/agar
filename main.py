@@ -7,12 +7,14 @@ import re
 import sys
 import thread
 from socket import *
-import http, ws
+import http
 import parse
+"""import module you create"""
+import back
 
 """socket, addr, port, conn, regex, ucon"""
 handler_list = [
-        (r'^(gamedat)$'   , ws.handler  , ['ucon']),
+        (r'^(gamedat)$'   , back.handler, ['ucon']),
         (r'^add/(\d+)/(\d+)$' , http.add, ['regex']),
         (r'^get_ip_port$' , http.res_ip , ['ucon', 'addr', 'port']),
         (r'^$'            , http.entry  , []),

@@ -22,10 +22,20 @@
 	var playerColor  = "#235689";
 	var playerSpeed  = 4.5;
 	var playerMaxSpeed = 6.0;
-	var updateDataFromServer = {};
+	var updateDataFromServer = {
+		"header": "update", 
+		"player": {
+			"y": 0.0, 
+			"x": 0.0, 
+			"r": 0.0
+		}, 
+		"enemy": [],
+		"fruit": [] 
+	};
 
 	var frameNumber  = 40;
-	var SocketOpened = false;
+	var wsOpened = false;
+	var hasInit  = false;
 	var ws;
 
 	$.get('get_ip_port', function(data, statu) {
@@ -36,19 +46,17 @@
 		ws = new WebSocket(url);
 		ws.onopen = function(){
 			console.log('Open Socket');
-			SocketOpened = true;
+			wsOpened = true;
+			initFromServer();
 		}
 		ws.onmessage = getDataFromServer;
 	})
 	
-	setTimeout(function(){ws.send('Hello World!');}, 100);
-
 	$(document).ready(function(){
 		$("#canvas").attr({
 			"width":'' + document.documentElement.clientWidth,
 			"height":'' + document.documentElement.clientHeight
 		});
-		initFromServer();
 		ctx = document.getElementById("canvas").getContext("2d");
 		window.onresize = resizeCanvas;
 		document.onmousemove = moveMouse;
@@ -77,12 +85,7 @@
 	function initFromServer()
 	{
 		var data = '{"header":"init"}';
-		var retStr = postDataToServer(data);
-		var retObj = JSON.parse(retStr);
-		playerId = retObj.playerId;
-		playerX = retObj.pos.x;
-		playerY = retObj.pos.y;
-		playerRadius = retObj.playerRadius;
+		ws.send(data);
 	}
 
 	function resizeCanvas(e) {
@@ -179,18 +182,27 @@
 			}
 		};
 		data = JSON.stringify(data);
-		tmp = postDataToServer(data);
-		updateDataFromServer = JSON.parse(tmp);
-		/*
-		$.post('gamedat', data, function(data, statu){
-			console.log(statu + data);
-		});
-		*/
+		if(wsOpened)
+			ws.send(data);
 	}
 
 	function getDataFromServer(evt)
 	{
 		console.log('data from server:' + evt.data);
+		var obj = JSON.parse(evt.data);
+		switch(obj.header)
+		{
+			case 'init':
+				hasInit = true;
+				playerId = obj.playerId;
+				playerX = obj.pos.x;
+				playerY = obj.pos.y;
+				playerRadius = obj.playerRadius;
+				break;
+			case 'update':
+				updateDataFromServer = obj;
+				break;
+		}
 	}
 
 	function parseDataFromServer() {
@@ -227,8 +239,11 @@
 	this.mainLogic = function() {
 		drawBack();
 		drawPlayer();
-		updateFromServer();
-		parseDataFromServer();
-		displayParsedData();
+		if(hasInit)
+		{
+			updateFromServer();
+			parseDataFromServer();
+			displayParsedData();
+		}
 	}
 })();
