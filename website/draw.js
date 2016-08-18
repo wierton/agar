@@ -41,7 +41,7 @@
 		ws.onmessage = getDataFromServer;
 	})
 	
-	setTimeout(function(){ws.send('Hello World!aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');}, 100);
+	setTimeout(function(){ws.send('Hello World!');}, 100);
 
 	$(document).ready(function(){
 		$("#canvas").attr({
@@ -190,7 +190,7 @@
 
 	function getDataFromServer(evt)
 	{
-		console.log(evt.data);
+		console.log('data from server:' + evt.data);
 	}
 
 	function parseDataFromServer() {

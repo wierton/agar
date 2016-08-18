@@ -32,14 +32,10 @@ class WebSocket:
         """connection"""
         self.conn = conn
         """data structure for ws frame"""
-        self.fin        = 1
-        self.opcode     = 0
-        self.payloadlen = 0
-        self.mask       = 0
-        self.mask_key   = ()
-        self.raw_data   = ''
-        self.data_st    = 0
-        self.data       = ''
+        self.fin      = 0
+        self.opcode   = 0
+        self.data     = ''
+        self.raw_data = ''
     def handshake(self, Sec_WebSocket_Key):
         status = "HTTP/1.1 101 Switching Protocols\r\n"
         handshake = "Upgrade:websocket\r\n" + \
@@ -50,37 +46,55 @@ class WebSocket:
         key = base64.encodestring(ha.digest())[:-1]
         self.conn.send(status + handshake + key + '\r\n\r\n')
     def parse_data(self):
+        if len(self.raw_data) < 2:
+            log.e('error happened at recv data(ws)')
+            return
         fb, sb = unpack("2B", self.raw_data[:2])
-        self.opcode = fb & 0x3
         self.fin    = (fb & 0x80) >> 7
-        self.mask   = (sb & 0x80) >> 7
-        self.payloadlen = sb & 0x7f
-        mask_key_st = 2
-        print self.payloadlen
-        if self.payloadlen == 126:
-            self.payloadlen, = unpack(">H", self.raw_data[2:4])
+        self.opcode = fb & 0x3
+        mask   = (sb & 0x80) >> 7
+        mask_key   = '\0\0\0\0'
+        payloadlen = sb & 0x7f
+        mask_key_st  = 2
+        real_data_st = 0
+        if payloadlen == 126:
+            payloadlen, = unpack(">H", self.raw_data[2:4])
             mask_key_st = 4
-        print self.payloadlen
-        if self.payloadlen == 127:
-            self.payloadlen, = unpack(">L", self.raw_data[2:10])
+        if payloadlen == 127:
+            payloadlen, = unpack(">L", self.raw_data[2:10])
             mask_key_st = 10
-        print self.payloadlen
-        if self.mask:
-            self.mask_key = unpack("4B", self.raw_data[mask_key_st:mask_key_st+4])
-        self.data_st = mask_key_st + 4
-        raw_data = self.raw_data[self.data_st:]
-        tmp_data = list(unpack(str(len(raw_data))+"B", raw_data))
-        for i in range(len(tmp_data)):
-            tmp_data[i] ^= self.mask_key[i%4]
-        self.data += pack(str(len(tmp_data))+"B", *tmp_data)
-        print self.payloadlen, self.data
-
+        real_data_st = mask_key_st
+        if mask:
+            mask_key = self.raw_data[mask_key_st:mask_key_st+4]
+            real_data_st = mask_key_st+4
+        i = 0
+        for c in self.raw_data[real_data_st:]:
+            self.data += chr(ord(c) ^ ord(mask_key[i]))
+            i = (i+1)%4
     def recv(self):
-        while not self.fin:
-            self.raw_data = self.conn.recv(64*1024)
-            self.parse_data()
+        while 1:
+            self.fin  = 0
+            self.data = ''
+            while not self.fin:
+                self.raw_data = self.conn.recv(64*1024)
+                self.parse_data()
+            if self.opcode == 0x9:
+                print 'PingPong'
+                self.raw_data[0] = self.raw_data[0]&0xf0|0xa
+                self.conn.send(self.raw_data)
+            else:
+                break
     def send(self, data):
-        pass
+        size  = len(data)
+        sdata = ''
+        if size < 126:
+            sdata += chr(0x81) + chr(size)
+        elif size < 65536:
+            sdata += chr(0x81) + chr(126) + pack(">H", size)
+        else:
+            sdata += chr(0x81) + chr(127) + pack(">L", size)
+        sdata += data
+        self.conn.send(sdata)
 
 def handler(ucon):
     Sec_WebSocket_Key = ucon.headers['Sec-WebSocket-Key']
@@ -88,5 +102,6 @@ def handler(ucon):
     ws.handshake(Sec_WebSocket_Key)
     while 1:
         ws.recv()
-        ws.send('Hello World!')
+        print ws.data
+        ws.send('See You lala!')
     ucon.alive = False
