@@ -19,8 +19,9 @@ def entry():
     with open('website/main.html') as fp:
         return fp.read()
 
-def res_ip(addr, port):
-    return '\{"addr":{0}, "port":{1}\}'.format(addr, port)
+def res_ip(ucon, addr, port):
+    ucon.alive = False
+    return '{{"addr":"{0}", "port":"{1}"}}'.format(addr, port)
 
 def ack_404():
     return '<html>404</html>'

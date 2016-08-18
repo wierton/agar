@@ -1,16 +1,20 @@
 #!/usr/bin/python
 #-*- coding=utf-8 -*-
 
-import os, re, sys, thread
+import log
+import os
+import re
+import sys
+import thread
 from socket import *
 import http, ws
 import parse
 
-'socket, addr, port, conn, regex, ucon'
+"""socket, addr, port, conn, regex, ucon"""
 handler_list = [
-        (r'^(gamedat)$' , ws.handler    , ['ucon']),
+        (r'^(gamedat)$'   , ws.handler  , ['ucon']),
         (r'^add/(\d+)/(\d+)$' , http.add, ['regex']),
-        (r'^get_ip_port$' , http.res_ip , ['addr', 'port']),
+        (r'^get_ip_port$' , http.res_ip , ['ucon', 'addr', 'port']),
         (r'^$'            , http.entry  , []),
         (r'^(.*)$'        , http.handler, ['regex']),
         (r'*'             , http.ack_404, []),
@@ -20,8 +24,8 @@ def switch_handler(s, conn, addr):
     ucon = parse.load(s, conn, addr)
     alternative_args = {
             'socket' : s,
-            'addr'   : s.getsockname[0],
-            'port'   : s.getsockname[1],
+            'addr'   : s.getsockname()[0],
+            'port'   : s.getsockname()[1],
             'conn'   : conn,
             'ucon'   : ucon,
             }

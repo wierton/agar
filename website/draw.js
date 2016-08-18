@@ -25,13 +25,23 @@
 	var updateDataFromServer = {};
 
 	var frameNumber  = 40;
+	var SocketOpened = false;
+	var ws;
 
-	$.get('get_ip', function(data, statu) {
+	$.get('get_ip_port', function(data, statu) {
 		console.log(statu, data);
+		var obj = JSON.parse(data);
+		var url = "ws://" + obj['addr']+':'+obj['port'] + '/gamedat';
+		console.log(url);
+		ws = new WebSocket(url);
+		ws.onopen = function(){
+			console.log('Open Socket');
+			SocketOpened = true;
+		}
+		ws.onmessage = getDataFromServer;
 	})
-
-	var ws = new WebSocket("ws://127.0.0.1:8080/gamedat");
-	ws.onmessage = getDataFromServer;
+	
+	setTimeout(function(){ws.send('Hello World!aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');}, 100);
 
 	$(document).ready(function(){
 		$("#canvas").attr({
@@ -43,7 +53,6 @@
 		window.onresize = resizeCanvas;
 		document.onmousemove = moveMouse;
 		drawBack();
-		ws.send('qweasd');
 	})
 	
 	setInterval("this.mainLogic()", 1000 / frameNumber);
@@ -181,6 +190,7 @@
 
 	function getDataFromServer(evt)
 	{
+		console.log(evt.data);
 	}
 
 	function parseDataFromServer() {
