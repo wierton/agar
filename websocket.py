@@ -48,7 +48,7 @@ class WebSocket:
         self.conn.send(status + handshake + key + '\r\n\r\n')
     def parse_data(self):
         if len(self.raw_data) < 2:
-            log.e('error happened at recv data(ws)')
+            log.e('error happened while recving data(ws)')
             exit(2)
         fb, sb = unpack("2B", self.raw_data[:2])
         self.fin    = (fb & 0x80) >> 7

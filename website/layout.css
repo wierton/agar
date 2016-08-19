@@ -14,13 +14,16 @@
 .ranking-list {
 	z-index:1;
 	width:200px;
-	height:280px;
 	margin-top:30px;
 	margin-right:50px;
 	position:fixed;
 	right:0px;
 	background-color:rgba(127, 127, 127, 0.45);
 	border-radius:5px;
+}
+
+.pad-bottom {
+	height:15px;
 }
 
 .ranking-list-top {
@@ -31,15 +34,56 @@
 	font-size:26px;
 	float:right;
 	margin-top:16px;
-	margin-bottom:16px;
+	margin-bottom:10px;
+	padding-bottom:6px;
+	border-bottom:1px;
+	border-bottom-style:solid;
+	border-bottom-color:rgb(127, 127, 127);
 }
 
-.player {
+.player-spec {
 	position:relative;
 	border-width:1px;
 	border-color:#222222;
 	margin:0px;
 	color:#ffffff;
 	font-size:20px;
-	padding-left:10px;
+	padding-left:20px;
+}
+
+.ui {
+	width:300px;
+	height:300px;
+	position:absolute;
+	left:50%;
+	margin-left:-150px;
+	top:30%;
+	background-color:#bbb;
+	background-image: linear-gradient(#aaa 2px, transparent 2px),
+	linear-gradient(90deg, #aaa 2px, transparent 2px),
+	linear-gradient(rgba(255,255,255,.3) 1px, transparent 1px),
+	linear-gradient(90deg, rgba(255,255,255,.3) 1px, transparent 1px);
+	background-size:100px 100px, 100px 100px, 20px 20px, 20px 20px;
+	background-position:-1px -1px, -1px -1px, -1px -1px, -1px -1px;
+	border-radius:5px;
+}
+
+.form {
+	position:absolute;
+	bottom:20px;
+	left:30px;
+	display:inline-block;
+}
+
+.username {
+	border-width:1px;
+}
+
+.submit {
+	background:#235689;
+	border-width:1px;
+	border-radius:10px;
+}
+
+.username {
 }

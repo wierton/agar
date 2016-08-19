@@ -12,7 +12,6 @@ def handler(rfile):
         return fp.read()
 
 def add(a, b):
-    print a, b
     return str(int(a)+int(b))
 
 def entry():

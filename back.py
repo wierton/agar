@@ -1,6 +1,7 @@
 #!/usr/bin/python
 #-*- coding=utf-8 -*-
 
+import log
 import websocket
 import math, json, random
 
@@ -12,7 +13,9 @@ playerMaxNum  = 20
 ballMaxNum    = 320#at most 16 ball for per player
 fruitMaxNum   = 200
 maxDist       = 100
+playerActiveIdArray = []
 playerAvailIdArray  = [0] * playerMaxNum
+playerWebSocketArray= [0] * playerMaxNum
 playerLiveArray     = [0] * playerMaxNum
 playerPosXArray     = [0.] * playerMaxNum
 playerPosYArray     = [0.] * playerMaxNum
@@ -27,7 +30,6 @@ playerRadiusArray   = [0.] * playerMaxNum
 playerMaxSpeedArray = [0.] * playerMaxNum
 
 def init():
-    playerAvailIdArray  = [0] * playerMaxNum
     for i in range(playerMaxNum):
         playerAvailIdArray [i] = i
         playerLiveArray    [i] = True
@@ -44,7 +46,9 @@ def init():
 
 def getFreePlayerId():
     if len(playerAvailIdArray) > 0:
-        return playerAvailIdArray.pop()
+        availId = playerAvailIdArray.pop()
+        playerActiveIdArray.append(availId)
+        return availId
     else:
         return -1
 
@@ -63,7 +67,7 @@ def checkCollision(playerId):
     playerX = playerPosXArray[playerId]
     playerY = playerPosYArray[playerId]
     playerR = playerRadiusArray[playerId]
-    for i in range(playerMaxNum):
+    for i in playerActiveIdArray:
         if i == playerId or not playerLiveArray[i]:
             continue
         x = playerPosXArray[i]
@@ -114,6 +118,8 @@ def responseUpdate(obj):
     playerY = playerPosYArray[playerId]
     playerR = playerRadiusArray[playerId]
 
+    if not playerId in playerActiveIdArray:
+        return {"header":"status", "status":"dead"}
     dx = obj['body']['dirX']
     dy = obj['body']['dirY']
     dist = math.sqrt(dx*dx+dy*dy)
@@ -127,7 +133,7 @@ def responseUpdate(obj):
     retJSON['enemy']  = []
     retJSON['fruit']  = []
     checkCollision(playerId)
-    for i in range(playerMaxNum):
+    for i in playerActiveIdArray:
         x = playerPosXArray[i]
         y = playerPosYArray[i]
         r = playerRadiusArray[i]
@@ -154,18 +160,27 @@ def responseUpdate(obj):
 
 # send and post
 def handle_data(dataFromClient):
-    obj = json.loads(dataFromClient)
+    data_valid = True
+    try:
+        obj = json.loads(dataFromClient)
+    except:
+        data_valid = False
+    if not data_valid or not obj.get('header'):
+        log.e('ws get invalid data')
+        return '{}'
     switcher = {
             'init':responseInit,
-            'update':responseUpdate
+            'update':responseUpdate,
             }
     retObj = switcher[obj['header']](obj)
-    retObj['header'] = obj['header']
+    if not 'header' in retObj:
+        retObj['header'] = obj['header']
     return json.dumps(retObj)
 
 def handler(ucon):
-    init()
     ws = websocket.load(ucon)
     while 1:
         ws.recv()
         ws.send(handle_data(ws.data))
+
+init()

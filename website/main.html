@@ -12,11 +12,15 @@
 <div class="surface">
 <div class="ranking-list">
 <div><span class="ranking-list-top">Ranking</span></div>
-<div><span class="player"><em>1. </em>king jong-un</span></div>
-<div><span class="player"><em>2. </em>ukalo</span></div>
-<div><span class="player"><em>3. </em>Solo</span></div>
-<div><span class="player"><em>4. </em>European Union</span></div>
-<div><span class="player"><em>5. </em>Taiwan</span></div>
+<div class = "pad-bottom"></div>
+</div>
+<div class="ui">
+	<div class="form">
+		<form name="frm" id="submitname" method="post" action="gameinit" onsubmit="return false;">
+			<input class="username" type="text" name="name"></input>
+			<input class="submit" type="submit" value="开始游戏"></input>
+		</form>
+	</div>
 </div>
 <canvas id="canvas"></canvas>
 </div>

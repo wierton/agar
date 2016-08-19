@@ -3,8 +3,6 @@
 
 import os, sys
 
-script_name = sys.argv[0]
-
 IS_ANSI_TERMINAL = os.getenv('TERM') in (
     'eterm-color',
     'linux',
@@ -71,7 +69,9 @@ def print_err(text, *colors):
 
 def print_log(text, *colors):
     """Print a log message to standard error."""
-    sys.stderr.write(sprint("{}: {}".format(script_name, text), *colors) + "\n")
+    lineno = sys._getframe().f_back.f_back.f_lineno
+    script_name = os.path.basename(sys._getframe().f_back.f_back.f_code.co_filename)
+    sys.stderr.write(sprint("{},{}: {}".format(script_name, lineno, text), *colors) + "\n")
 
 def i(message):
     """Print a normal log message."""

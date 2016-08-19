@@ -69,24 +69,27 @@ def parse_args():
         if result:
             addr, port = regex[1](result)
             return addr, int(port)
-    print 'Invalid IP address or port !!!'
+    log.e('Invalid IP address or port !!!')
     exit(0)
 
-addr, port = '127.0.0.1', 8080
-if len(sys.argv) > 1 :
-    addr, port = parse_args()
-print addr, port
-try:
-    s = socket(AF_INET, SOCK_STREAM)
-except:
-    print 'socket creation fails'
-    exit(-1)
-try:
-    s.bind((addr, port))
-    s.listen(10)
-    while 1:
-        conn,addr = s.accept()
-        log.i("{} {}".format('connected by', addr))
-        thread.start_new_thread(switch_handler, (s, conn, addr))
-finally:
-    s.close()
+if __name__ == "__main__":
+    addr, port = '127.0.0.1', 8080
+    if len(sys.argv) > 1 :
+        addr, port = parse_args()
+
+    log.d("addr: {}:{}".format(addr, port))
+
+    try:
+        s = socket(AF_INET, SOCK_STREAM)
+    except:
+        log.e('socket creation fails')
+        exit(-1)
+    try:
+        s.bind((addr, port))
+        s.listen(10)
+        while 1:
+            conn,addr = s.accept()
+            log.i("connected by {}".format(addr))
+            thread.start_new_thread(switch_handler, (s, conn, addr))
+    finally:
+        s.close()
