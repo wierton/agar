@@ -51,39 +51,138 @@
 	padding-left:20px;
 }
 
+.title {
+	margin:20px;
+	padding-bottom:10px;
+	margin-top:20px;
+	margin-bottom:20px;
+	border-bottom: #aaa 1px solid;
+}
+
 .ui {
-	width:300px;
-	height:300px;
+	width:400px;
+	height:400px;
 	position:absolute;
 	left:50%;
-	margin-left:-150px;
-	top:30%;
-	background-color:#bbb;
+	margin-left:-200px;
+	top:50%;
+	margin-top:-200px;
+	background-color:#fff;
+	border-radius:10px;
+/*	background-color:#bbb;
 	background-image: linear-gradient(#aaa 2px, transparent 2px),
 	linear-gradient(90deg, #aaa 2px, transparent 2px),
 	linear-gradient(rgba(255,255,255,.3) 1px, transparent 1px),
 	linear-gradient(90deg, rgba(255,255,255,.3) 1px, transparent 1px);
 	background-size:100px 100px, 100px 100px, 20px 20px, 20px 20px;
 	background-position:-1px -1px, -1px -1px, -1px -1px, -1px -1px;
-	border-radius:5px;
+	border-radius:5px;*/
 }
 
 .form {
 	position:absolute;
 	bottom:20px;
-	left:30px;
+	left:0px;
 	display:inline-block;
 }
 
 .username {
-	border-width:1px;
+	border:#888 1px solid;
+	width:230px;
+	height:35px;
+	margin-left:20px;
+	margin-bottom:10px;
+	border-radius:4px;
+    padding: 0px 12px;
+    font-size: 14px;
+    line-height: 1.42857143;
+    color: #555;
 }
 
 .submit {
-	background:#235689;
+	background-color:#428bca;
 	border-width:1px;
-	border-radius:10px;
+	border-radius:7px;
+	font-size:14px;
+	color:white;
+	padding:10px 20px 10px 20px;
+	text-align:center;
+	white-space:nowrap;
 }
 
-.username {
+.submit:hover{
+	background-color:#235689;
+	cursor:pointer;
 }
+
+.uname {
+	width:400px;
+	height:230px;
+	position:absolute;
+}
+
+.head-portrait {
+	width:150px;
+	height:150px;
+	position:absolute;
+	left:40px;
+	margin-top:40px;
+	border-radius:50%;
+	background:#235689;
+}
+
+.pallet {
+	width:150px;
+	height:150px;
+	margin-top:40px;
+	position:absolute;
+	right:40px;
+}
+
+.color-spec-row1 {
+	width:50px;
+	height:90px;
+	margin:8px;
+	border-width:3px;
+	border-color:#aaa;
+	display:inline-block;
+}
+
+.color-spec-row2 {
+	width:50px;
+	height:90px;
+	margin:8px;
+	border-width:3px;
+	border-color:#aaa;
+	display:inline-block;
+}
+
+.color-spec {
+	width:50px;
+	height:20px;
+	margin:8px;
+	border-width:3px;
+	border-color:#aaa;
+}
+
+.set-color {
+	width:120px;
+	height:20px;
+	margin-left:15px;
+	border:#bbb 1px solid;
+	border-radius:4px;
+	padding-left:7px;
+}
+
+.color-spec:hover{
+	border-width:3px;
+	border-color:#777777;
+}
+
+#red{background:red;}
+#green{background:green;}
+#black{background:black;}
+#purple{background:purple;}
+#yellow{background:yellow;}
+#blue{background:blue;}
+

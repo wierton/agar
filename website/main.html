@@ -15,9 +15,31 @@
 <div class = "pad-bottom"></div>
 </div>
 <div class="ui">
+	<div>
+		<h2 class="title">Rewritted Agar</h2>
+	</div>
+	<div class="uname">
+		<div class = "head-portrait">
+		</div>
+		<div class="pallet">
+			<div class="color-spec-row1">
+				<div id="red" class="color-spec"></div>
+				<div id="green" class="color-spec"></div>
+				<div id="black" class="color-spec"></div>
+			</div>
+			<div class="color-spec-row2">
+				<div id="purple" class="color-spec"></div>
+				<div id="yellow" class="color-spec"></div>
+				<div id="blue" class="color-spec"></div>
+			</div>
+			<div>
+				<input class="set-color" placeholder="RGB,如#235689"></input>
+			</div>
+		</div>
+	</div>
 	<div class="form">
-		<form name="frm" id="submitname" method="post" action="gameinit" onsubmit="return false;">
-			<input class="username" type="text" name="name"></input>
+		<form name="frm" id="submitname" method="post" action="gameinit" onsubmit="return initFromServer();">
+			<input class="username" placeholder="请输入昵称" type="text" name="name"></input>
 			<input class="submit" type="submit" value="开始游戏"></input>
 		</form>
 	</div>

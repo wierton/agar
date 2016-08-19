@@ -3,8 +3,8 @@ var itemActualNum = 0;
 var itemXArray = new Array(itemMaxNum);
 var itemYArray = new Array(itemMaxNum);
 var itemRArray = new Array(itemMaxNum);
-var cellWidth   = 500;
-var cellHeight  = 500;
+var cellWidth   = 100;
+var cellHeight  = 100;
 var wholeWidth  = 2000;
 var wholeHeight = 2000;
 var availWidth  = document.documentElement.clientWidth;
@@ -46,7 +46,6 @@ $.get('get_ip_port', function(data, statu) {
 	ws.onopen = function(){
 		console.log('Open Socket');
 		wsOpened = true;
-		initFromServer();
 	}
 	ws.onmessage = getDataFromServer;
 })
@@ -61,17 +60,6 @@ $(document).ready(function(){
 	document.onmousemove = moveMouse;
 	drawBack();
 })
-
-function submitname()
-{
-	$("#submitname").ajaxSubmit(function(msg){
-		alert(msg);
-	});
-	alert('qwe');
-	return false;
-}
-
-//setInterval("mainLogic()", 1000 / frameNumber);
 
 function applyRankToScreen(obj)
 {
@@ -102,8 +90,11 @@ function test()
 
 function initFromServer()
 {
-	var data = '{"header":"init"}';
-	ws.send(data);
+	var name = document.frm.name.value;
+	var data = '{"header":"init", "body":{"name":"' + name + '"}}';
+	if(name != '')
+		ws.send(data);
+	return false;
 }
 
 function resizeCanvas(e) {
@@ -125,10 +116,10 @@ function drawBack(){
 	}
 	borderStartX = playerX < (availWidth / 2) ? ((availWidth / 2) - playerX) : (toUp(playerX - availWidth / 2) - (playerX - availWidth / 2));
 	borderStartY = playerY < (availHeight / 2) ? ((availHeight / 2) - playerY) : (toUp(playerY - availHeight / 2) - (playerY - availHeight / 2));
-	ctx.fillStyle = "black";
-	ctx.strokeStyle = "black";
+	ctx.fillStyle = "#22262a";
+	ctx.strokeStyle = "#22262a";
 	ctx.fillRect(0, 0, availWidth, availHeight);
-	ctx.fillStyle = "#222222";
+	ctx.fillStyle = "#32363a";
 	for(i = borderStartX; i <= availWidth; i += zoomRate * cellWidth)
 	{
 		ctx.fillRect(i, 0, 1, availHeight);
@@ -221,6 +212,8 @@ function getDataFromServer(evt)
 			playerX = obj.pos.x;
 			playerY = obj.pos.y;
 			playerRadius = obj.playerRadius;
+			setInterval("mainLogic()", 1000 / frameNumber);
+			$(".ui").hide();
 			break;
 		case 'update':
 			updateDataFromServer = obj;
