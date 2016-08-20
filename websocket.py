@@ -79,6 +79,7 @@ class WebSocket:
             while not self.fin:
                 self.raw_data = self.conn.recv(64*1024)
                 self.parse_data()
+                print self.data, '\n', ','.join(["%x"%(ord(i)) for i in self.raw_data]), '-'*8
             if self.opcode == 0x9:
                 print 'PingPong'
                 self.raw_data[0] = self.raw_data[0]&0xf0|0xa

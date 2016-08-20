@@ -9,6 +9,7 @@ import thread
 from socket import *
 import http
 import parse
+import autoreload
 """import module you create"""
 import back
 
@@ -72,7 +73,7 @@ def parse_args():
     log.e('Invalid IP address or port !!!')
     exit(0)
 
-if __name__ == "__main__":
+def main():
     addr, port = '127.0.0.1', 8080
     if len(sys.argv) > 1 :
         addr, port = parse_args()
@@ -91,5 +92,11 @@ if __name__ == "__main__":
             conn,addr = s.accept()
             log.i("connected by {}".format(addr))
             thread.start_new_thread(switch_handler, (s, conn, addr))
+    except:
+        conn.close()
     finally:
         s.close()
+
+
+if __name__ == "__main__":
+    autoreload.run_with_reloader(main)
