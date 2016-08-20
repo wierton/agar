@@ -52,17 +52,6 @@ def getFreePlayerId():
     else:
         return -1
 
-def responseInit(obj):
-    playerId = 0
-    retObj = {}
-    playerId = int(getFreePlayerId())
-    retObj['playerId'] = playerId
-    retObj['playerRadius'] = playerRadiusArray[playerId]
-    retObj['pos'] = {}
-    retObj['pos']['x'] = playerPosXArray[playerId]
-    retObj['pos']['y'] = playerPosYArray[playerId]
-    return retObj
-
 def checkCollision(playerId):
     playerX = playerPosXArray[playerId]
     playerY = playerPosYArray[playerId]
@@ -101,9 +90,9 @@ def responseUpdate(obj):
           "playerId":12,
           "dirX":123,
           "dirY":456,
-          "actualWidth":1366,
-          "actualHeight":768,
-          "zoomRate":1.0	}
+          "width":1366,
+          "height":768,
+      }
       update-response {
           "player":{"x":465, "y":789},
           "enemy":{"x":465, "y":789},
@@ -111,17 +100,17 @@ def responseUpdate(obj):
           }
     '''
     retJSON = {}
-    playerId = int(obj['body']['playerId'])
-    actualWidth = obj['body']['actualWidth']
-    actualHeight = obj['body']['actualHeight']
+    playerId = int(obj['playerId'])
+    width = obj['width']
+    height = obj['height']
     playerX = playerPosXArray[playerId]
     playerY = playerPosYArray[playerId]
     playerR = playerRadiusArray[playerId]
 
     if not playerId in playerActiveIdArray:
         return {"header":"status", "status":"dead"}
-    dx = obj['body']['dirX']
-    dy = obj['body']['dirY']
+    dx = obj['dirX']
+    dy = obj['dirY']
     dist = math.sqrt(dx*dx+dy*dy)
     rate = [dist/maxDist, 1][dist > maxDist]
     playerSpeed = rate * playerMaxSpeedArray[playerId]
@@ -138,16 +127,16 @@ def responseUpdate(obj):
         y = playerPosYArray[i]
         r = playerRadiusArray[i]
         if playerLiveArray[i] \
-	and 2*math.fabs(x-playerX) < actualWidth \
-        and 2*math.fabs(y-playerY) < actualHeight:
+	and 2*math.fabs(x-playerX) < width \
+        and 2*math.fabs(y-playerY) < height:
             retJSON['enemy'].append({"x":x,"y":y,"r":r})
 
     for i in range(fruitMaxNum):
         x = fruitPosXArray[i]
         y = fruitPosYArray[i]
         if fruitLiveArray[i] \
-        and 2*math.fabs(x-playerX) < actualWidth \
-        and 2*math.fabs(y-playerY) < actualHeight:
+        and 2*math.fabs(x-playerX) < width \
+        and 2*math.fabs(y-playerY) < height:
             retJSON['fruit'].append({"x":x,"y":y})
 
     if finalX > 0 and finalX < wholeWidth:
@@ -158,6 +147,17 @@ def responseUpdate(obj):
     retJSON['player'] = {"x":playerX, "y":playerY, "r":playerR}
     return retJSON
 
+def responseInit(obj):
+    playerId = 0
+    retObj = {}
+    playerId = int(getFreePlayerId())
+    retObj['playerId'] = playerId
+    retObj['playerRadius'] = playerRadiusArray[playerId]
+    retObj['pos'] = {}
+    retObj['pos']['x'] = playerPosXArray[playerId]
+    retObj['pos']['y'] = playerPosYArray[playerId]
+    return retObj
+
 # send and post
 def handle_data(dataFromClient):
     data_valid = True
@@ -166,8 +166,8 @@ def handle_data(dataFromClient):
     except:
         data_valid = False
     if not data_valid or not obj.get('header'):
-        log.e('ws get invalid data')
-        return '{}'
+        log.e('ws get invalid data:{}'.format(dataFromClient))
+        return '{"header":"unknown"}'
     switcher = {
             'init':responseInit,
             'update':responseUpdate,
@@ -175,7 +175,7 @@ def handle_data(dataFromClient):
     retObj = switcher[obj['header']](obj)
     if not 'header' in retObj:
         retObj['header'] = obj['header']
-    return json.dumps(retObj)
+    return retObj
 
 def handler(ucon):
     ws = websocket.load(ucon)
@@ -184,7 +184,10 @@ def handler(ucon):
         if ws.closed:
             ucon.alive = False
             break
-        data = handle_data(ws.data)
-        ws.send(data)
+        obj = handle_data(ws.data)
+        ws.send(json.dumps(retObj))
+        if obj['header'] == 'init':
+            playerId = int(obj['playerId'])
+            playerWebSocketArray[playerId] = ws
 
 init()

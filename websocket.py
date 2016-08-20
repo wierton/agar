@@ -105,8 +105,9 @@ class WebSocket:
         sdata += data
         self.conn.send(sdata)
     def close(self, status_code=1000):
-        data = chr(0x88) + chr(2) + chr(0x8d) + chr(0x3)
+        data = chr(0x88) + chr(0x02) + chr(0x03) + chr(0xe8)
         self.conn.send(data)
+        self.closed = True
 
 def handler(ucon):
     Sec_WebSocket_Key = ucon.headers['Sec-WebSocket-Key']

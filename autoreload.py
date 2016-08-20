@@ -43,12 +43,6 @@ def restart_with_reloader():
 def run_with_reloader(runner):
     if os.environ.get('RUN_FLAG') == 'true':
         thread.start_new_thread(runner, ())
-        try:
-            start_change_detector()
-        except KeyboardInterrupt:
-            pass
+        start_change_detector()
     else:
-        try:
-            sys.exit(restart_with_reloader())
-        except KeyboardInterrupt:
-            pass
+        sys.exit(restart_with_reloader())

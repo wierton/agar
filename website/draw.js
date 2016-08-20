@@ -48,6 +48,9 @@ $.get('get_ip_port', function(data, statu) {
 		wsOpened = true;
 	}
 	ws.onmessage = getDataFromServer;
+	ws.onclose = function() {
+		console.log('close');
+	}
 })
 
 $(document).ready(function(){
@@ -93,7 +96,9 @@ function initFromServer()
 	var name = document.frm.name.value;
 	var data = '{"header":"init", "body":{"name":"' + name + '"}}';
 	if(name != '')
+	{
 		ws.send(data);
+	}
 	return false;
 }
 
@@ -181,14 +186,11 @@ function updateFromServer()	{
 	var tmp = '';
 	var data = {
 		"header":"update",
-		"body"  : {
-			"playerId":playerId,
-			"dirX"    :(mouseX - availWidth/2),
-			"dirY"    :(mouseY - availHeight/2),
-			"actualWidth" :(zoomRate * availWidth),
-			"actualHeight":(zoomRate * availHeight),
-			"zoomRate"    :zoomRate
-		}
+		"playerId":playerId,
+		"dirX"    :(mouseX - availWidth/2),
+		"dirY"    :(mouseY - availHeight/2),
+		"width"   :(availWidth),
+		"height"  :(availHeight),
 	};
 	data = JSON.stringify(data);
 	if(wsOpened)
