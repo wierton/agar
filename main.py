@@ -49,7 +49,8 @@ def switch_handler(s, conn, addr):
                     else:
                         log.e("Unknown key {}".format(key))
                 sdata = tup[1](*args)
-                ucon.send(sdata)
+                if sdata:
+                    ucon.send(sdata)
                 break
         if not ucon.alive or not suc_match:
             ucon.close()
@@ -93,7 +94,10 @@ def main():
             log.i("connected by {}".format(addr))
             thread.start_new_thread(switch_handler, (s, conn, addr))
     except:
-        conn.close()
+        try:
+            conn.close()
+        except:
+            pass
     finally:
         s.close()
 

@@ -37,6 +37,7 @@ class WebSocket:
         self.opcode   = 0
         self.data     = ''
         self.raw_data = ''
+        self.closed   = False
     def handshake(self, Sec_WebSocket_Key):
         status = "HTTP/1.1 101 Switching Protocols\r\n"
         handshake = "Upgrade:websocket\r\n" + \
@@ -52,7 +53,7 @@ class WebSocket:
             exit(2)
         fb, sb = unpack("2B", self.raw_data[:2])
         self.fin    = (fb & 0x80) >> 7
-        self.opcode = fb & 0x3
+        self.opcode = fb & 0xf
         mask   = (sb & 0x80) >> 7
         mask_key   = '\0\0\0\0'
         payloadlen = sb & 0x7f
@@ -73,20 +74,26 @@ class WebSocket:
             self.data += chr(ord(c) ^ ord(mask_key[i]))
             i = (i+1)%4
     def recv(self):
+        if self.closed:
+            return
         while 1:
             self.fin  = 0
             self.data = ''
             while not self.fin:
                 self.raw_data = self.conn.recv(64*1024)
                 self.parse_data()
-                print self.data, '\n', ','.join(["%x"%(ord(i)) for i in self.raw_data]), '-'*8
-            if self.opcode == 0x9:
+            if self.opcode == 0x8:
+                self.closed = True
+                break
+            elif self.opcode == 0x9:
                 print 'PingPong'
                 self.raw_data[0] = self.raw_data[0]&0xf0|0xa
                 self.conn.send(self.raw_data)
             else:
                 break
     def send(self, data):
+        if self.closed:
+            return
         size  = len(data)
         sdata = ''
         if size < 126:
@@ -98,8 +105,7 @@ class WebSocket:
         sdata += data
         self.conn.send(sdata)
     def close(self, status_code=1000):
-        data = chr(0x88) + chr(2)
-        data += pack('H2s', status_code, 'aa')
+        data = chr(0x88) + chr(2) + chr(0x8d) + chr(0x3)
         self.conn.send(data)
 
 def handler(ucon):

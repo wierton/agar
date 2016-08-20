@@ -181,6 +181,10 @@ def handler(ucon):
     ws = websocket.load(ucon)
     while 1:
         ws.recv()
-        ws.send(handle_data(ws.data))
+        if ws.closed:
+            ucon.alive = False
+            break
+        data = handle_data(ws.data)
+        ws.send(data)
 
 init()
