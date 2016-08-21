@@ -8,7 +8,7 @@ import sys
 import thread
 from socket import *
 import http
-import parse
+import upconnection
 import autoreload
 """import module you create"""
 import back
@@ -24,7 +24,7 @@ handler_list = [
         ]
 
 def switch_handler(s, conn, addr):
-    ucon = parse.load(s, conn, addr)
+    ucon = upconnection.load(s, conn, addr)
     alternative_args = {
             'socket' : s,
             'addr'   : s.getsockname()[0],
@@ -74,30 +74,24 @@ def parse_args():
     log.e('Invalid IP address or port !!!')
     exit(0)
 
+
 def main():
     addr, port = '127.0.0.1', 8080
     if len(sys.argv) > 1 :
         addr, port = parse_args()
 
     log.d("addr: {}:{}".format(addr, port))
+    s = socket(AF_INET, SOCK_STREAM)
+    s.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
 
-    try:
-        s = socket(AF_INET, SOCK_STREAM)
-    except:
-        log.e('socket creation fails')
-        exit(-1)
     try:
         s.bind((addr, port))
         s.listen(10)
         while 1:
+            global lis
             conn,addr = s.accept()
             log.i("connected by {}".format(addr))
             thread.start_new_thread(switch_handler, (s, conn, addr))
-    except:
-        try:
-            conn.close()
-        except:
-            pass
     finally:
         s.close()
 

@@ -14,9 +14,9 @@ var ctx         = undefined;
 
 var mouseX       = wholeWidth / 2;
 var mouseY       = wholeHeight / 2;
-var playerX      = 0;
-var playerY      = 0;
-var playerId     = 0;
+var playerX      = wholeWidth / 2;
+var playerY      = wholeHeight / 2;
+var playerId     = -1;
 var playerRadius = 0;
 var playerColor  = "#235689";
 var playerSpeed  = 4.5;
@@ -36,6 +36,9 @@ var frameNumber  = 40;
 var wsOpened = false;
 var hasInit  = false;
 var ws;
+
+var headPortrait;
+var setColorInput;
 
 $.get('get_ip_port', function(data, statu) {
 	console.log(statu, data);
@@ -62,6 +65,21 @@ $(document).ready(function(){
 	window.onresize = resizeCanvas;
 	document.onmousemove = moveMouse;
 	drawBack();
+
+	headPortrait = document.getElementsByClassName('head-portrait')[0];
+	setColorInput = document.getElementsByClassName('set-color')[0];
+	setColorInput.addEventListener("mouseout", function(){
+		headPortrait.getAttributeNode('style').value = "background:" + setColorInput.value;
+		$('.head-portrait').blur();
+	});
+	setColorInput.addEventListener("keydown", function(e){
+		keynum = window.event ? e.keyCode : e.which;
+		if(keynum == 13)
+		{
+			headPortrait.getAttributeNode('style').value = "background:" + setColorInput.value;
+			$('.head-portrait').blur();
+		}
+	});
 })
 
 function applyRankToScreen(obj)
@@ -93,11 +111,13 @@ function test()
 
 function initFromServer()
 {
+	playerColor = setColorInput.value;
+	console.log(playerColor);
 	var name = document.frm.name.value;
-	var data = '{"header":"init", "body":{"name":"' + name + '"}}';
+	var data = {"header":"init", "name":name, "playerId":playerId};
 	if(name != '')
 	{
-		ws.send(data);
+		ws.send(JSON.stringify(data));
 	}
 	return false;
 }
@@ -136,7 +156,7 @@ function drawBack(){
 }
 
 function drawItem(x, y, r) {
-	ctx.fillStyle = playerColor;
+	ctx.fillStyle = "#235689";
 	ctx.beginPath();
 	ctx.arc(x, y, r, 0, 2*Math.PI);
 	ctx.closePath();
@@ -200,7 +220,11 @@ function updateFromServer()	{
 function handleStatus(obj)
 {
 	if(obj['status'] == 'dead')
+	{
 		console.log('dead');
+		hasInit = false;
+		$(".ui").fadeIn();
+	}
 }
 
 function getDataFromServer(evt)
@@ -210,12 +234,15 @@ function getDataFromServer(evt)
 	{
 		case 'init':
 			hasInit = true;
+			if(playerId == -1)
+			{
+				setInterval("mainLogic()", 1000 / frameNumber);
+			}
 			playerId = obj.playerId;
 			playerX = obj.pos.x;
 			playerY = obj.pos.y;
 			playerRadius = obj.playerRadius;
-			setInterval("mainLogic()", 1000 / frameNumber);
-			$(".ui").hide();
+			$(".ui").fadeOut();
 			break;
 		case 'update':
 			updateDataFromServer = obj;

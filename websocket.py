@@ -59,6 +59,8 @@ class WebSocket:
         payloadlen = sb & 0x7f
         mask_key_st  = 2
         real_data_st = 0
+        if payloadlen > 0x83:
+            print ','.join("%x"%(ord(i)) for i in self.raw_data)
         if payloadlen == 126:
             payloadlen, = unpack(">H", self.raw_data[2:4])
             mask_key_st = 4

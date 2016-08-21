@@ -7,7 +7,7 @@ import socket
 import json
 from common import get_asctime, get_filetype, dich_to_str
 
-class Parse:
+class Ucon:
     def __init__(self, s, conn, addr):
         self.s       = s
         self.conn    = conn
@@ -28,7 +28,7 @@ class Parse:
     def recv(self):
         self.raw_recv()
         if not '\r\n\r\n' in self.data:
-            log.e('Unable to parse the data.')
+            log.e('Unable to parse the data:{}.'.format(self.data))
             self.alive = False
             return
         proto_headers, self.body = self.data.split('\r\n\r\n', 1)
@@ -59,7 +59,7 @@ class Parse:
         self.raw_recv()
         return json.loads(self.data)
 
-    def send(self, data='', headers={}):
+    def send(self, data='', headers={}, cookies={}):
         status   = "HTTP/1.1 200 OK\r\n"
         sheaders = {
                 "Content-Length"   :str(len(data)),
@@ -81,5 +81,5 @@ class Parse:
         log.i('Disconnect with:' + str(self.addr))
 
 def load(s, conn, addr):
-    parse = Parse(s, conn, addr)
-    return parse
+    ucon = Ucon(s, conn, addr)
+    return ucon

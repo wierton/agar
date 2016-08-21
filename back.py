@@ -16,6 +16,7 @@ maxDist       = 100
 playerActiveIdArray = []
 playerAvailIdArray  = [0] * playerMaxNum
 playerWebSocketArray= [0] * playerMaxNum
+playerNameArray     = [''] * playerMaxNum
 playerLiveArray     = [0] * playerMaxNum
 playerPosXArray     = [0.] * playerMaxNum
 playerPosYArray     = [0.] * playerMaxNum
@@ -68,6 +69,7 @@ def checkCollision(playerId):
         if r + 1 < playerR and dist + r < playerR + 1:
             playerR = math.sqrt(r*r+playerR*playerR)
             playerLiveArray[i] = False
+            playerWebSocketArray[i].send('{"header":"status", "status":"dead"}')
 
     for i in range(fruitMaxNum):
         if not fruitLiveArray[i]:
@@ -84,21 +86,6 @@ def checkCollision(playerId):
     playerRadiusArray[playerId] = playerR
 
 def responseUpdate(obj):
-    '''
-    {"header":"update", "body":{}}
-      update-request {
-          "playerId":12,
-          "dirX":123,
-          "dirY":456,
-          "width":1366,
-          "height":768,
-      }
-      update-response {
-          "player":{"x":465, "y":789},
-          "enemy":{"x":465, "y":789},
-          "fruit":{"x":465, "y":789}
-          }
-    '''
     retJSON = {}
     playerId = int(obj['playerId'])
     width = obj['width']
@@ -109,19 +96,10 @@ def responseUpdate(obj):
 
     if not playerId in playerActiveIdArray:
         return {"header":"status", "status":"dead"}
-    dx = obj['dirX']
-    dy = obj['dirY']
-    dist = math.sqrt(dx*dx+dy*dy)
-    rate = [dist/maxDist, 1][dist > maxDist]
-    playerSpeed = rate * playerMaxSpeedArray[playerId]
-    
-    finalX = playerX + playerSpeed * dx / dist
-    finalY = playerY + playerSpeed * dy / dist
 
     retJSON['player'] = {}
     retJSON['enemy']  = []
     retJSON['fruit']  = []
-    checkCollision(playerId)
     for i in playerActiveIdArray:
         x = playerPosXArray[i]
         y = playerPosYArray[i]
@@ -139,18 +117,36 @@ def responseUpdate(obj):
         and 2*math.fabs(y-playerY) < height:
             retJSON['fruit'].append({"x":x,"y":y})
 
-    if finalX > 0 and finalX < wholeWidth:
-        playerX = playerPosXArray[playerId] = finalX
-    if finalY > 0 and finalY < wholeHeight:
-        playerY = playerPosYArray[playerId] = finalY
+    if playerLiveArray[playerId]:
+        dx = obj['dirX']
+        dy = obj['dirY']
+        dist = math.sqrt(dx*dx+dy*dy)
+        rate = [dist/maxDist, 1][dist > maxDist]
+        playerSpeed = rate * playerMaxSpeedArray[playerId]
+        
+        finalX = playerX + playerSpeed * dx / dist
+        finalY = playerY + playerSpeed * dy / dist
+
+        if finalX > 0 and finalX < wholeWidth:
+            playerX = playerPosXArray[playerId] = finalX
+        if finalY > 0 and finalY < wholeHeight:
+            playerY = playerPosYArray[playerId] = finalY
+        
+        checkCollision(playerId)
 
     retJSON['player'] = {"x":playerX, "y":playerY, "r":playerR}
     return retJSON
 
 def responseInit(obj):
-    playerId = 0
     retObj = {}
-    playerId = int(getFreePlayerId())
+    playerId = int(obj['playerId'])
+    if playerId == -1:
+        playerId = int(getFreePlayerId())
+    else:
+        playerLiveArray[playerId] = True
+    playerNameArray[playerId] = obj['name']
+    playerPosXArray[playerId] = random.uniform(0, wholeWidth)
+    playerPosYArray[playerId] = random.uniform(0, wholeHeight)
     retObj['playerId'] = playerId
     retObj['playerRadius'] = playerRadiusArray[playerId]
     retObj['pos'] = {}
@@ -166,8 +162,8 @@ def handle_data(dataFromClient):
     except:
         data_valid = False
     if not data_valid or not obj.get('header'):
-        log.e('ws get invalid data:{}'.format(dataFromClient))
-        return '{"header":"unknown"}'
+        log.e('ws get invalid data (len={}):{}'.format(len(dataFromClient), ','.join('%x'%(ord(i)) for i in dataFromClient)))
+        return {"header":"unknown"}
     switcher = {
             'init':responseInit,
             'update':responseUpdate,
@@ -178,6 +174,7 @@ def handle_data(dataFromClient):
     return retObj
 
 def handler(ucon):
+    playerId = -1
     ws = websocket.load(ucon)
     while 1:
         ws.recv()
@@ -185,8 +182,8 @@ def handler(ucon):
             ucon.alive = False
             break
         obj = handle_data(ws.data)
-        ws.send(json.dumps(retObj))
-        if obj['header'] == 'init':
+        ws.send(json.dumps(obj))
+        if obj.get('header') == 'init':
             playerId = int(obj['playerId'])
             playerWebSocketArray[playerId] = ws
 
